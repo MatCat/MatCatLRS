@@ -1,7 +1,9 @@
-openLRSng
+MatCatLRS
 =========
 
-my fork of openLRS code (based on thUndeadMod of openLRS)
+Based on openLRSng code and adapted for slightly different hardware configuration then base Flytron hardware.
+
+This version relies completely on Serial communication instead of PPM/PWM.  Rest of README to be updated soon.  
 
 TRANSMITTER HW:
 ===============
