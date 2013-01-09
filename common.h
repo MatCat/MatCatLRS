@@ -295,11 +295,15 @@ void tx_packet(unsigned char* pkt, unsigned char size) {
   ItStatus1 = spiReadRegister(0x03);      //read the Interrupt Status1 register
   ItStatus2 = spiReadRegister(0x04);
   #ifdef TX_TIMING
+  Serial.print("0x03: ");
+  Serial.println(ItStatus1);  
+  Serial.print("0x04: ");
+  Serial.println(ItStatus2);
   unsigned long tx_start=micros();
   #endif
   spiWriteRegister(0x07, RF22B_PWRSTATE_TX);    // to tx mode
 
-  while(nIRQ_1);
+  //while(nIRQ_1);
   #ifdef TX_TIMING
   Serial.print("TX took:");
   Serial.println(micros()-tx_start);

@@ -147,57 +147,69 @@
 
 #if (BOARD_TYPE == 3)
   #ifdef COMPILE_TX
-
-    #define USE_ICP1 // use ICP1 for PPM input for less jitter
-
-    #ifdef USE_ICP1
-      #define PPM_IN 8 // ICP1
-    #else
-      #define PPM_IN 3
-      #define PPM_Pin_Interrupt_Setup  PCMSK2 = 0x08;PCICR|=(1<<PCIE2);
-      #define PPM_Signal_Interrupt PCINT2_vect
-      #define PPM_Signal_Edge_Check (PIND & 0x08)==0x08
+    #ifndef MATCATLRS_HW
+      #define USE_ICP1 // use ICP1 for PPM input for less jitter
+  
+      #ifdef USE_ICP1
+        #define PPM_IN 8 // ICP1
+      #else
+        #define PPM_IN 3
+        #define PPM_Pin_Interrupt_Setup  PCMSK2 = 0x08;PCICR|=(1<<PCIE2);
+        #define PPM_Signal_Interrupt PCINT2_vect
+        #define PPM_Signal_Edge_Check (PIND & 0x08)==0x08
+      #endif
+      #define BUZZER 6
+      #define BTN 7
     #endif
-    #define BUZZER 6
-    #define BTN 7
   #else
-    #define PPM_OUT 9 // OCP1A
-    #define RSSI_OUT 3 // PD3
+    #ifndef MATCATLRS_HW
+      #define PPM_OUT 9 // OCP1A
+      #define RSSI_OUT 3 // PD3
 
-    #define PWM_1 5
-    #define PWM_1_MASK 0x0020 //PD5
-    #define PWM_2 6
-    #define PWM_2_MASK 0x0040 //PD6
-    #define PWM_3 7
-    #define PWM_3_MASK 0x0080 //PD7
-    #define PWM_4 8
-    #define PWM_4_MASK 0x0100 //PB0
-    #define PWM_5 9
-    #define PWM_5_MASK 0x0200 // PB1
-    #define PWM_6 10
-    #define PWM_6_MASK 0x0400 // PB2
-    #define PWM_7 11
-    #define PWM_7_MASK 0x0800 // PB3
-    #define PWM_8 12
-    #define PWM_8_MASK 0x1000 // PB4
+      #define PWM_1 5
+      #define PWM_1_MASK 0x0020 //PD5
+      #define PWM_2 6
+      #define PWM_2_MASK 0x0040 //PD6
+      #define PWM_3 7
+      #define PWM_3_MASK 0x0080 //PD7
+      #define PWM_4 8
+      #define PWM_4_MASK 0x0100 //PB0
+      #define PWM_5 9
+      #define PWM_5_MASK 0x0200 // PB1
+      #define PWM_6 10
+      #define PWM_6_MASK 0x0400 // PB2
+      #define PWM_7 11
+      #define PWM_7_MASK 0x0800 // PB3
+      #define PWM_8 12
+      #define PWM_8_MASK 0x1000 // PB4
 
-    const unsigned short PWM_MASK[8] = { PWM_1_MASK, PWM_2_MASK, PWM_3_MASK, PWM_4_MASK, PWM_5_MASK, PWM_6_MASK, PWM_7_MASK, PWM_8_MASK };
-    #define PWM_ALL_MASK 0x1FE0 // all bits used for PWM (logic OR of above)
+      const unsigned short PWM_MASK[8] = { PWM_1_MASK, PWM_2_MASK, PWM_3_MASK, PWM_4_MASK, PWM_5_MASK, PWM_6_MASK, PWM_7_MASK, PWM_8_MASK };
+      #define PWM_ALL_MASK 0x1FE0 // all bits used for PWM (logic OR of above)
 
-    #define PWM_MASK_PORTB(x) (((x)>>8) & 0xff)
-    #define PWM_MASK_PORTD(x) ((x) & 0xff)
-
+      #define PWM_MASK_PORTB(x) (((x)>>8) & 0xff)
+      #define PWM_MASK_PORTD(x) ((x) & 0xff)
+  #endif
   #endif
 
+#ifndef MATCATLRS_HW
   #define Red_LED A3
   #define Green_LED 13
 
-  #define Red_LED_ON  PORTC |= _BV(3);
-  #define Red_LED_OFF  PORTC &= ~_BV(3);    // Was originally #define Green_LED_OFF  PORTB |= _BV(5);   E.g turns it ON not OFF
+  #define Red_LED_ON PORTC |= _BV(3);
+  #define Red_LED_OFF PORTC &= ~_BV(3); // Was originally #define Green_LED_OFF PORTB |= _BV(5); E.g turns it ON not OFF
 
-  #define Green_LED_ON  PORTB |= _BV(5);
-  #define Green_LED_OFF  PORTB &= ~_BV(5);
+  #define Green_LED_ON PORTB |= _BV(5);
+  #define Green_LED_OFF PORTB &= ~_BV(5);
+#else
+  #define Red_LED 10
+  #define Green_LED 9
 
+  #define Red_LED_ON  PORTB &= ~_BV(2);
+  #define Red_LED_OFF  PORTB |= _BV(2);  
+
+  #define Green_LED_ON  PORTB &= ~_BV(1);
+  #define Green_LED_OFF  PORTB |= _BV(1);
+#endif
   //## RFM22B Pinouts for Public Edition (Rx v2)
   #define  nIRQ_1 (PIND & 0x04)==0x04 //D2
   #define  nIRQ_0 (PIND & 0x04)==0x00 //D2

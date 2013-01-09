@@ -1,8 +1,8 @@
 /****************************************************
- * OpenLRSng transmitter code
+ * MatCatLRS transmitter code
  ****************************************************/
 unsigned char RF_channel = 0;
-
+unsigned int channelFaker = 0;
 unsigned char FSstate = 0; // 1 = waiting timer, 2 = send FS, 3 sent waiting btn release
 unsigned long FStime = 0;  // time when button went down...
 
@@ -18,6 +18,7 @@ volatile byte         ppmCounter = PPM_CHANNELS; // ignore data until first sync
 #define TIMER1_PRESCALER    8
 #define TIMER1_PERIOD       (F_CPU/TIMER1_PRESCALER/TIMER1_FREQUENCY_HZ)
 
+#ifndef MATCATLRS_HW
 #ifdef USE_ICP1 // Use ICP1 in input capture mode
 /****************************************************
  * Interrupt Vector
@@ -77,7 +78,7 @@ void setupPPMinput() {
   PPM_Pin_Interrupt_Setup
 }
 #endif
-
+#endif
 void scannerMode(){
   char c;
   unsigned long nextConfig[4] = {0,0,0,0};
@@ -89,7 +90,9 @@ void scannerMode(){
   unsigned long rssiSum=0;
   Red_LED_OFF;
   Green_LED_OFF;
+#ifndef MATCATLRS_HW  
   digitalWrite(BUZZER, LOW);
+#endif
   Serial.println("scanner mode");
   to_rx_mode();
   while(1) {
@@ -189,17 +192,22 @@ void bindMode() {
     if (millis() - prevsend > 200) {
       prevsend=millis();
       Green_LED_ON;
+#ifndef MATCATLRS_HW
       digitalWrite(BUZZER, HIGH); // Buzzer on
+#endif
       tx_packet((unsigned char*)&bind_data, sizeof(bind_data));
       Green_LED_OFF;
+#ifndef MATCATLRS_HW
       digitalWrite(BUZZER, LOW); // Buzzer off
+#endif
     }
     while (Serial.available()) handleCLI(Serial.read());
   }
 }
 
 void checkButton(){
-  
+#ifndef MATCATLRS_HW
+
   unsigned long time,loop_time;
 
   if (digitalRead(BTN)==0) // Check the button
@@ -239,10 +247,12 @@ void checkButton(){
     Serial.println("Entering binding mode\n");
     bindMode();
   }
+#endif
 }
 
 void checkFS(void){
-  
+#ifndef MATCATLRS_HW
+
   switch (FSstate) {
     case 0:
       if (!digitalRead(BTN)) {
@@ -267,6 +277,7 @@ void checkFS(void){
       }
       break;
   }
+#endif
 }
 
 void setup() {
@@ -281,11 +292,11 @@ void setup() {
   //LED and other interfaces
   pinMode(Red_LED, OUTPUT); //RED LED
   pinMode(Green_LED, OUTPUT); //GREEN LED
+#ifndef MATCATLRS_HW
   pinMode(BUZZER, OUTPUT); //Buzzer
   pinMode(BTN, INPUT); //Buton
-
   pinMode(PPM_IN, INPUT); //PPM from TX
-
+#endif
   Serial.begin(SERIAL_BAUD_RATE);
   
   if (bindReadEeprom()) {
@@ -296,31 +307,53 @@ void setup() {
     bindWriteEeprom();
     Serial.print("EEPROM data saved\n");
   }
-
+#ifndef MATCATLRS_HW
   setupPPMinput();
-
+#endif
   init_rfm(0);
   rfmSetChannel(bind_data.hopchannel[RF_channel]);
 
   sei();
 
+#ifndef MATCATLRS_HW
   digitalWrite(BUZZER, HIGH);
   digitalWrite(BTN, HIGH);
+#endif
   Red_LED_ON ;
   delay(100);
 
   checkButton();
 
   Red_LED_OFF;
+#ifndef MATCATLRS_HW
   digitalWrite(BUZZER, LOW);
-
+#endif
   ppmAge = 255;
   rx_reset();
 
 }
 
 void loop() {
-
+  #ifdef MATCATLRS_HW
+  if (ppmAge > 8) {
+    PPM[0] += 1;
+    PPM[1] += 2;
+    PPM[3] += 4;
+    PPM[4] += 6;
+    PPM[5] += 10;
+    PPM[6] +=8;
+    PPM[7] += 3;
+    if (PPM[0] > 1023) {PPM[0] = PPM[0] - 1023;}
+    if (PPM[1] > 1023) {PPM[1] = PPM[1] - 1023;}
+    if (PPM[2] > 1023) {PPM[2] = PPM[2] - 1023;}
+    if (PPM[3] > 1023) {PPM[3] = PPM[3] - 1023;}
+    if (PPM[4] > 1023) {PPM[4] = PPM[4] - 1023;}
+    if (PPM[5] > 1023) {PPM[5] = PPM[5] - 1023;}
+    if (PPM[6] > 1023) {PPM[6] = PPM[6] - 1023;}
+    if (PPM[7] > 1023) {PPM[7] = PPM[7] - 1023;}
+    ppmAge = 0;
+  }
+  #endif
   if (spiReadRegister(0x0C)==0) // detect the locked module and reboot
   {
     Serial.println("module locked?");
